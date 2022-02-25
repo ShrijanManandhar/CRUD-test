@@ -1,9 +1,13 @@
 package com.codehimalayan.firstproject.service.impl;
 
 
+import com.codehimalayan.firstproject.dto.AddressDto;
 import com.codehimalayan.firstproject.dto.CollegeRequestDTO;
 import com.codehimalayan.firstproject.dto.CollegeResponseDTO;
+import com.codehimalayan.firstproject.dto.DepartmentDto;
+import com.codehimalayan.firstproject.entity.Address;
 import com.codehimalayan.firstproject.entity.College;
+import com.codehimalayan.firstproject.entity.Department;
 import com.codehimalayan.firstproject.repository.CollegeRepo;
 import com.codehimalayan.firstproject.service.CollegeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -25,9 +30,27 @@ public class CollegeServiceImpl implements CollegeService {
     public CollegeResponseDTO addCollege(CollegeRequestDTO collegeRequestDTO) {
         College college = new College();
         college.setStudentName(collegeRequestDTO.getStudentName());
-        college.setAddress(collegeRequestDTO.getAddress());
         college.setPhoneNumber(collegeRequestDTO.getPhoneNumber());
         college.setFaculty(collegeRequestDTO.getFaculty());
+
+
+        Address address= new Address().builder()
+        .city(collegeRequestDTO.getAddressDto().getCity())
+                .state(collegeRequestDTO.getAddressDto().getState())
+                .college(college)
+                .build();
+        List<Department> departmentList = collegeRequestDTO.getDepartmentDtoList()
+                .stream()
+                .map(departmentDto -> new Department().builder()
+                        .departmentName(departmentDto.getDepartmentName())
+                        .lecturerName(departmentDto.getLecturerName())
+                        .subject(departmentDto.getSubject())
+                        .college(college)
+                        .build()).collect(Collectors.toList());
+
+        college.setAddress(address);
+        college.getDepartment().clear();
+        college.getDepartment().addAll(departmentList);
 
         College college1 = collegeRepo.save(college);
 
@@ -37,11 +60,25 @@ public class CollegeServiceImpl implements CollegeService {
     @Override
     public List<CollegeResponseDTO> getAllCollege() {
         List<College> colleges=collegeRepo.findAll();
-        List<CollegeResponseDTO> collegeResponseDTOS= new ArrayList<>();
-        for(College college: colleges)
-        {
-            collegeResponseDTOS.add(new CollegeResponseDTO(college));
-        }
+        List<CollegeResponseDTO> collegeResponseDTOS= colleges.stream()
+                .map(college -> {
+                    CollegeResponseDTO dto = new CollegeResponseDTO(college);
+                    dto.setAddressDto(
+                            new AddressDto()
+                                    .setCity(college.getAddress().getCity())
+                                    .setState(college.getAddress().getState())
+                    );
+                    dto.getDepartmentDtoList().clear();
+                    dto.getDepartmentDtoList().addAll(
+                            college.getDepartment().stream()
+                                    .map(department -> new DepartmentDto()
+                                            .setDepartmentName(department.getDepartmentName())
+                                            .setLecturerName(department.getLecturerName())
+                                            .setSubject(department.getSubject())).collect(Collectors.toList())
+                    );
+                    return dto;
+                }).collect(Collectors.toList());
+
         return collegeResponseDTOS;
     }
 
@@ -59,7 +96,7 @@ public class CollegeServiceImpl implements CollegeService {
 
             college.setId(id);
             college.setStudentName(collegeRequestDTO.getStudentName());
-            college.setAddress(collegeRequestDTO.getAddress());
+//            college.setAddress(collegeRequestDTO.getAddress());
             college.setPhoneNumber(collegeRequestDTO.getPhoneNumber());
             college.setFaculty(collegeRequestDTO.getFaculty());
 

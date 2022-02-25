@@ -10,16 +10,14 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Department {
-
+public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    private String departmentName;
-    private String lecturerName;
-    private String subject;
+    private String city;
+    private  String state;
 
-    @ManyToOne
-    @JoinColumn(name="college_id", referencedColumnName = "id", nullable = false)
+    @OneToOne(orphanRemoval = true)
     private College college;
+
 }

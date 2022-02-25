@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,8 +15,8 @@ import lombok.Setter;
 public class CollegeRequestDTO {
     private Integer id;
     private String studentName;
-    private String address;
+    private AddressDto addressDto;
     private String phoneNumber;
     private String faculty;
-
+    private List<DepartmentDto> departmentDtoList;
 }
